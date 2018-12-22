@@ -8,7 +8,7 @@ var numParents = 2; //Generally leave this at 2 unless you have a weird race tha
 var box = {height:50, width:100, border:"black", fill:"white", posX:0, posY:0};
 var connector = 50; //The width of the space between boxes of different generations
 var header = {height: 100, width: 100, isEnabled: true};
-var pedigree = generatePedigree();
+var pedigree = parentsArray([],generatePedigree());
 var vertSpacer = 25; //minimum vertical space between boxes of the same generation    
 
 //set canvas dimensions based on the number of generations and box size
@@ -200,7 +200,7 @@ function drawPedigree () {
     ctx.stroke();
 }
 function randBetween(a,b){
-  return a+(Math.random()*b);
+  return a;//+(Math.random()*b);
 }
 function randomFirstName () {
   return firstNames[Math.floor(Math.random()*firstNames.length)];
@@ -213,7 +213,7 @@ function generateName () {
 }
 function createPerson (child) {
     var person = new Object();
-    switch (person) {
+    switch (child) {
         case 0:
             person.name = generateName();
             person.age = randBetween(13, 23);
@@ -231,26 +231,47 @@ function generateParents(child, generationsLeft){
   if (!child.parents){
     child.parents=[];
   }
-  for(i=0; i<numParents; i++){
-    parent = createPerson(child);
-    child.parents.push();
-
-    if (generationsLeft) {
-      generateParents(child, generationsLeft - 1);
+  if (generationsLeft) {
+    for(var i=0; i<numParents; i++){
+      var parent = createPerson(child);
+      child.parents.push(parent);
+        generateParents(parent, generationsLeft - 1);
     }
   }
 }
+
 function generatePedigree () {
   finalPerson=createPerson(0);
 
-  generateParents(finalPerson, numGenerations);
-  return pedArr;
+  generateParents(finalPerson, numGenerations-1 );
+  return finalPerson;
 }
-    
+// I'm not doing great with functions and names but this works
+function parentsArray(current, person){
+  var arr=[];
+  var depth=numGenerations;
+  for( var i=0; i<=depth; i++){
+    arr = arr.concat(BFRDescent(person, i));
+  }
+  return arr;
+}
+function BFRDescent(tree, depth){
+  var generation=[];
+  var arr = [tree]
+  if (depth == 0) {return [tree];}
+  if (depth>0){
+    for (var j=0; j<tree.parents.length; j++) {
+
+      generation = generation.concat(BFRDescent(tree.parents[j], depth-1));
+    }
+  }
+  return generation;
+
+}
 //test code
 
 for (i = 0; i <= pedigree.length - 1; i++) {
-    console.log("pedigree" + i + " is " + pedigree[i].name + " compared to 0, which is " + pedigree[0].name);
+    console.log("pedigree" + i + " is " + pedigree[i].name + " compared to 0, which is " + pedigree[0].name + " Age: " + pedigree[i].age);
 }
 
 pedigree[0].ninja = "yes";
